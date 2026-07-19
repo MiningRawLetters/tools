@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>997 Word Creator Help</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            font-weight: 500;
+        }
+        h1 {
+            color: #FF5252;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 30px;
+            color: #333;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+        }
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #FF5252;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>997 Word Creator</h1>
+    
+    <p>
+        997 Word Creator is a RoboFont extension that generates test words for type testing, spacing, and more. 
+        It allows you to create lists of words that match specific criteria, such as containing certain letters,
+        matching specific patterns, or fitting within a specific range of lengths.
+    </p>
+    
+    <p>
+        This extension is based on Nina Stössinger's excellent word-o-mat extension but follows a functional
+        programming approach under the hood.
+    </p>
+    
+    <div class="note">
+        <strong>Note:</strong> To make the most of this extension, you should have a font open in RoboFont, 
+        especially if you want to limit results to characters in your font or sort words by width.
+    </div>
+    
+    <h2>Basic Settings</h2>
+    
+    <ul>
+        <li><strong>Source:</strong> Choose the dictionary/language to use for word generation.</li>
+        <li><strong>Number of words:</strong> Specify how many words you want to generate.</li>
+        <li><strong>Min/Max length:</strong> Set the minimum and maximum word length in characters.</li>
+        <li><strong>Limit to charset:</strong> When checked, only words containing characters in your font will be included.</li>
+    </ul>
+    
+    <h2>Letter Filters</h2>
+    
+    <ul>
+        <li><strong>Required letters:</strong> Specify letters that must be present in the words.</li>
+        <li><strong>All letters must be present:</strong> When checked, all required letters must appear in each word.</li>
+        <li><strong>No letter repetitions:</strong> When checked, words with consecutive identical letters are excluded.</li>
+    </ul>
+    
+    <h2>Advanced Filters</h2>
+    
+    <ul>
+        <li><strong>Match pattern (regex):</strong> Use regular expressions for more complex patterns.</li>
+        <li><strong>Custom character set:</strong> Restrict words to only use characters from this set.</li>
+    </ul>
+    
+    <h2>Output Settings</h2>
+    
+    <ul>
+        <li><strong>Case:</strong> Choose how to format the output (lowercase, UPPERCASE, Title Case, or RaNdOm).</li>
+        <li><strong>Sort by:</strong> Sort words alphabetically, by length, or by width in the current font.</li>
+        <li><strong>Sort order:</strong> Choose between ascending or descending order.</li>
+    </ul>
+    
+    <h2>Examples</h2>
+    
+    <table>
+        <tr>
+            <th>Goal</th>
+            <th>Settings</th>
+        </tr>
+        <tr>
+            <td>Words containing 'q' but not 'u'</td>
+            <td>Required letters: q<br>Match pattern: ^[^u]*$</td>
+        </tr>
+        <tr>
+            <td>Words with exactly three 'a's</td>
+            <td>Match pattern: ^([^a]*a){3}[^a]*$</td>
+        </tr>
+        <tr>
+            <td>Words with both ascenders and descenders</td>
+            <td>Match pattern: [bdfhklt].*[gpqyj]|[gpqyj].*[bdfhklt]</td>
+        </tr>
+        <tr>
+            <td>Words with no round characters</td>
+            <td>Match pattern: ^[^oOpPbBdDgGqQcC]*$</td>
+        </tr>
+    </table>
+    
+    <h2>Regular Expression Tips</h2>
+    
+    <ul>
+        <li><code>^</code> - Start of word</li>
+        <li><code>$</code> - End of word</li>
+        <li><code>[abc]</code> - Any character from the set (a, b, or c)</li>
+        <li><code>[^abc]</code> - Any character NOT in the set</li>
+        <li><code>.*</code> - Any characters (zero or more)</li>
+        <li><code>.+</code> - Any characters (one or more)</li>
+        <li><code>\w</code> - Any word character (alphanumeric + underscore)</li>
+        <li><code>{n}</code> - Exactly n times</li>
+        <li><code>{n,m}</code> - Between n and m times</li>
+    </ul>
+    
+    <h2>About</h2>
+    
+    <p>
+        997 Word Creator version 1.0<br>
+        Developed by Kevin Kuhn<br>
+        Based on word-o-mat by Nina Stössinger
+    </p>
+    
+    <p>
+        If you find any bugs or have suggestions for future development, please get in touch!
+    </p>
+    
+    <h2>License</h2>
+    
+    <p>
+        This extension is released under the MIT License. See the LICENSE.txt file in the extension package for details.
+    </p>
+</body>
+</html> 

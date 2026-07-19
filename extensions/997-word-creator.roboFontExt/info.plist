@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>addToMenu</key>
+	<array>
+		<dict>
+			<key>path</key>
+			<string>word_creator.py</string>
+			<key>preferredName</key>
+			<string>997 Word Creator</string>
+			<key>shortKey</key>
+			<array>
+				<integer>1703936</integer>
+				<string>W</string>
+			</array>
+		</dict>
+	</array>
+	<key>developer</key>
+	<string>Kevin Kuhn</string>
+	<key>developerURL</key>
+	<string>kevinkuhn.com</string>
+	<key>html</key>
+	<true/>
+	<key>launchAtStartUp</key>
+	<integer>0</integer>
+	<key>mainScript</key>
+	<string></string>
+	<key>name</key>
+	<string>997 Word Creator</string>
+	<key>timeStamp</key>
+	<real>1707935577</real>
+	<key>version</key>
+	<string>1.0</string>
+	<key>repository</key>
+	<string>kevinkuhn/997-word-creator</string>
+	<key>extensionPath</key>
+	<string>997-word-creator.roboFontExt</string>
+</dict>
+</plist> 
