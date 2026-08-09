@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 *.zip
+
+# local reference only: vendored third-party extensions, superseded bundle
+# versions, and non-type-tool material. Kept on disk, out of git.
+_attic/
