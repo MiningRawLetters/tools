@@ -97,10 +97,14 @@ def analyze_font_diacritic_widths(font, tolerance: int = 0) -> Dict[str, List[Di
 
         results.append({
             "name": name,
-            "width": glyph.width,
+            "width": round(glyph.width),
+            "left": round(glyph.leftMargin, 1),
+            "right": round(glyph.rightMargin, 1),
             "base": base_name,
-            "base_width": base_glyph.width,
-            "diff": diff,
+            "base_width": round(base_glyph.width),
+            "base_left": round(base_glyph.leftMargin, 1),
+            "base_right": round(base_glyph.rightMargin, 1),
+            "diff": round(diff, 1),
             "mismatch": abs(diff) > tolerance,
             "unicode": glyph.unicode,
         })
@@ -109,3 +113,54 @@ def analyze_font_diacritic_widths(font, tolerance: int = 0) -> Dict[str, List[Di
     unresolved.sort(key=lambda r: r["name"])
 
     return {"results": results, "unresolved": unresolved}
+
+
+def _resolve_pair(font, glyph_name: str, base_name: str):
+    if glyph_name not in font or base_name not in font:
+        return None, None
+    return font[glyph_name], font[base_name]
+
+
+def match_glyph_left_to_base(font, glyph_name: str, base_name: str) -> bool:
+    """
+    Move `glyph_name`'s outline so its left sidebearing matches `base_name`'s.
+    fontParts' leftMargin setter shifts the whole glyph and grows/shrinks the
+    width by the same amount, so the right sidebearing is left untouched.
+    """
+    glyph, base = _resolve_pair(font, glyph_name, base_name)
+    if glyph is None:
+        return False
+    glyph.leftMargin = base.leftMargin
+    return True
+
+
+def match_glyph_right_to_base(font, glyph_name: str, base_name: str) -> bool:
+    """
+    Change `glyph_name`'s width so its right sidebearing matches `base_name`'s.
+    fontParts' rightMargin setter only changes width, never moves the outline,
+    so the left sidebearing is left untouched.
+    """
+    glyph, base = _resolve_pair(font, glyph_name, base_name)
+    if glyph is None:
+        return False
+    glyph.rightMargin = base.rightMargin
+    return True
+
+
+def match_glyph_both_to_base(font, glyph_name: str, base_name: str) -> bool:
+    """
+    Match both sidebearings to the base's. Left first (moves the outline,
+    preserves the current right margin), then right (only adjusts width) -
+    so both land exactly on the base's values regardless of order-sensitivity.
+
+    Note this is NOT the same as matching advance width: the composite's own
+    outline (e.g. dcroat's extra bar, an accent mark) can be wider than the
+    base's, so matching both margins can still leave a different width - that
+    difference is real ink, not spacing drift.
+    """
+    glyph, base = _resolve_pair(font, glyph_name, base_name)
+    if glyph is None:
+        return False
+    glyph.leftMargin = base.leftMargin
+    glyph.rightMargin = base.rightMargin
+    return True
