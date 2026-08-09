@@ -3,7 +3,7 @@
 Generates the **Inside** and **Outside** cuts of Wood Shadow, each with the
 double square box drawn around the letter. Replaces the lost 2025 script;
 the geometry was reverse-engineered from
-`Wood Type/WoodShadow OTFs/250730_WoodShadow_{inside,outside}.otf`.
+`MRL Typefaces/Wood Shadow/WoodShadow OTFs/250730_WoodShadow_{inside,outside}.otf`.
 
 ## The recipe
 
@@ -31,17 +31,14 @@ glyphs have been redrawn and their shadow now extends past the recorded square
 (`G` 918 vs 768, `two` 802 vs 687, `question.ss01` 770 vs 537), so the square
 alone would cut the frame straight through the letter.
 
-Two modes in the dialog:
+So the box is the **union of the Shadow Square and the drawn shadow outline**.
+That reproduces the 2025 files exactly wherever the square is current,
+self-corrects where it isn't, and never clips. Glyphs with no square of their
+own fall back to their base glyph's (`G.ss02.ss01` → `G`) before the union.
 
-- **Square ∪ shadow** (default) — the box is the union of the Shadow Square and
-  the drawn shadow outline. Reproduces the 2025 files exactly wherever the
-  square is current; self-corrects where it isn't. Never clips.
-- **Shadow Square only** — literal 2025 behaviour. Glyphs with no square of
-  their own fall back to their base glyph's square (`G.ss02.ss01` → `G`).
-
-Glyphs with no box from either source (`ampersand`, `three`–`eight`) are
-exported unframed and listed in the report, along with anything that still
-overflows its frame.
+A glyph only ends up unframed if *neither* source has anything — currently just
+`ampersand`, whose shadow is still an empty outline with a tracing image in it.
+Those are listed in the report, along with anything that still overflows.
 
 ## Install
 

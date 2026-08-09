@@ -13,7 +13,7 @@ class WoodShadowExport:
         self.fonts = AllFonts()
         self.directory = None
 
-        self.w = vanilla.Window((420, 230), "MRL Wood Shadow")
+        self.w = vanilla.Window((420, 200), "MRL Wood Shadow")
 
         self.w.fontLabel = vanilla.TextBox((15, 18, 60, 20), "Source")
         self.w.font = vanilla.PopUpButton(
@@ -26,17 +26,11 @@ class WoodShadowExport:
         self.w.inside = vanilla.CheckBox((80, 50, 120, 20), "Inside (Wood)", value=True)
         self.w.outside = vanilla.CheckBox((210, 50, -15, 20), "Outside (Shadow)", value=True)
 
-        self.w.boxLabel = vanilla.TextBox((15, 86, 60, 20), "Box")
-        self.w.box = vanilla.PopUpButton(
-            (80, 84, 200, 20),
-            ["Square ∪ shadow (recommended)", "Shadow Square only"],
-        )
-
-        self.w.dirButton = vanilla.Button((80, 118, 120, 20), "Output…",
+        self.w.dirButton = vanilla.Button((80, 84, 120, 20), "Output…",
                                           callback=self.chooseDirectory)
-        self.w.dirLabel = vanilla.TextBox((210, 121, -15, 20), "—", sizeStyle="small")
+        self.w.dirLabel = vanilla.TextBox((210, 87, -15, 20), "—", sizeStyle="small")
 
-        self.w.report = vanilla.TextBox((15, 150, -15, 70), "", sizeStyle="small")
+        self.w.report = vanilla.TextBox((15, 118, -15, 50), "", sizeStyle="small")
 
         self.w.generate = vanilla.Button((-135, -35, 120, 20), "Generate",
                                          callback=self.generate)
@@ -83,18 +77,15 @@ class WoodShadowExport:
             self.w.report.set("Missing layer(s): %s" % ", ".join(missing))
             return
 
-        mode = [builder.BOX_UNION, builder.BOX_SQUARE][self.w.box.get()]
-
         report = []
         try:
-            written = builder.build(font, self.directory, cuts=cuts,
-                                    mode=mode, report=report)
+            written = builder.build(font, self.directory, cuts=cuts, report=report)
         except Exception as error:
             self.w.report.set("Failed: %s" % error)
             raise
 
         lines = ["Wrote %s" % ", ".join(os.path.basename(p) for p in written)]
-        for kind in ("unboxed (no square)", "overflows frame"):
+        for kind in ("unboxed (no box)", "overflows frame"):
             hit = [r.split(": ")[-1] for r in report if r.startswith(kind)]
             if hit:
                 lines.append("%s: %s" % (kind, ", ".join(sorted(set(hit)))))

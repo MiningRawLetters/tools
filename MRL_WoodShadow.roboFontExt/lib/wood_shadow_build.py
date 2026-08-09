@@ -25,7 +25,7 @@ No GSUB: the .ssNN alternates just ride along in the glyph order, as in the
 
 from fontTools.pens.transformPen import TransformPen
 
-SHIFT = 15          # sidebearing between frame outer edge and... see box_rect
+SHIFT = 15          # x of the box's left edge in the exported glyph
 OUTER = 6           # frame outer edge, outside the box
 INNER = 4           # frame inner edge, outside the box
 BOX_BOTTOM = -13
@@ -39,10 +39,6 @@ CUTS = [
     ("Inside", INSIDE_LAYER),
     ("Outside", OUTSIDE_LAYER),
 ]
-
-# how the box is measured
-BOX_UNION = "union"         # Shadow Square ∪ shadow outline (default)
-BOX_SQUARE = "square"       # Shadow Square only, literal 2025 behaviour
 
 
 def base_name(name):
@@ -76,11 +72,10 @@ def _shadow_rect(font, name):
     return None
 
 
-def box_rect(font, name, mode=BOX_UNION):
-    """(left, right) of the box, or None if the glyph gets no frame."""
+def box_rect(font, name):
+    """(left, right) of the box: the Shadow Square unioned with the shadow's own
+    outline. None if the glyph gets no frame."""
     square = _square_rect(font, name)
-    if mode == BOX_SQUARE:
-        return square
     shadow = _shadow_rect(font, name)
     if square and shadow:
         return min(square[0], shadow[0]), max(square[1], shadow[1])
@@ -112,7 +107,7 @@ def source_layer(font, layer_name):
     return font.getLayer(layer_name)
 
 
-def build_cut(font, layer_name, style_name, mode=BOX_UNION, report=None):
+def build_cut(font, layer_name, style_name, report=None):
     """Return a new fontParts font holding one cut. Caller generates/saves it."""
     from fontParts.world import NewFont
 
@@ -133,13 +128,13 @@ def build_cut(font, layer_name, style_name, mode=BOX_UNION, report=None):
     for name in names:
         srcGlyph = src[name]
         g = dst.newGlyph(name)
-        rect = box_rect(font, name, mode=mode)
+        rect = box_rect(font, name)
 
         if rect is None:
             srcGlyph.draw(TransformPen(g.getPen(), (1, 0, 0, 1, SHIFT, 0)))
             g.width = srcGlyph.width
             if report is not None and len(srcGlyph):
-                report.append("unboxed (no square): %s" % name)
+                report.append("unboxed (no box): %s" % name)
         else:
             left, right = rect
             offset = SHIFT - left
@@ -162,13 +157,13 @@ def build_cut(font, layer_name, style_name, mode=BOX_UNION, report=None):
     return dst
 
 
-def build(font, directory, cuts=None, mode=BOX_UNION, report=None):
+def build(font, directory, cuts=None, report=None):
     """Generate the OTFs. Returns list of written paths."""
     import os
 
     written = []
     for style_name, layer_name in (cuts or CUTS):
-        cut = build_cut(font, layer_name, style_name, mode=mode, report=report)
+        cut = build_cut(font, layer_name, style_name, report=report)
         family = (cut.info.familyName or "WoodShadow").replace(" ", "")
         path = os.path.join(directory, "%s-%s.otf" % (family, style_name))
         try:
