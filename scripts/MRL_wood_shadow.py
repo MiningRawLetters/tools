@@ -37,7 +37,13 @@ MAKE_OUTSIDE = True
 MAKE_UFO = True             # save a .ufo per cut
 MAKE_OTF = True             # generate an .otf per cut
 
-OUTPUT_DIR = None           # None = ask; or "/path/to/folder"
+OUTPUT_DIR = None           # None = ask; or "/path/to/folder", made if missing
+
+OUTPUT_SUBFOLDER = "%y%m%d_WoodShadow"
+                            # made inside OUTPUT_DIR, so each run is self-
+                            # contained and nothing overwrites the last one.
+                            # strftime codes are filled in (%y%m%d -> 260817).
+                            # Set to None to write straight into the folder.
 
 # ------------------------------------------------------------- the recipe ---
 
@@ -187,6 +193,17 @@ def build_cut(font, layer_name, style_name, vertical=None, report=None):
     return dst
 
 
+def make_directory(directory):
+    """The folder to write into, made if it isn't there — including the dated
+    subfolder, since the macOS folder picker can't create one."""
+    if OUTPUT_SUBFOLDER:
+        import time
+        directory = os.path.join(directory, time.strftime(OUTPUT_SUBFOLDER))
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+    return directory
+
+
 def build(font, directory, cuts=None, ufo=True, otf=True, report=None):
     """Write the cuts. Returns the list of paths written."""
     if cuts is None:
@@ -195,6 +212,8 @@ def build(font, directory, cuts=None, ufo=True, otf=True, report=None):
             cuts.append(("Inside", INSIDE_LAYER))
         if MAKE_OUTSIDE:
             cuts.append(("Outside", OUTSIDE_LAYER))
+
+    directory = make_directory(directory)
 
     vertical = box_vertical(font)
     print("   box band from %s: y %s..%s" % (REFERENCE_GLYPH, vertical[0], vertical[1]))
@@ -252,7 +271,8 @@ def main():
     report = []
     written = build(font, directory, ufo=MAKE_UFO, otf=MAKE_OTF, report=report)
 
-    print("Wood Shadow — wrote %s file(s) to %s" % (len(written), directory))
+    print("Wood Shadow — wrote %s file(s) to %s"
+          % (len(written), os.path.dirname(written[0]) if written else directory))
     for path in written:
         print("   %s" % os.path.basename(path))
 
