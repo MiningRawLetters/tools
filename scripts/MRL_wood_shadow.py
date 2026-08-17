@@ -37,13 +37,17 @@ MAKE_OUTSIDE = True
 MAKE_UFO = True             # save a .ufo per cut
 MAKE_OTF = True             # generate an .otf per cut
 
-OUTPUT_DIR = None           # None = ask; or "/path/to/folder", made if missing
+OUTPUT_DIR = None           # None = ask with a Save panel: navigate anywhere,
+                            # hit New Folder or just type a name, and that
+                            # name becomes the folder the files land in.
+                            # Or set a fixed "/path/to/folder", made if missing.
 
 OUTPUT_SUBFOLDER = "%y%m%d_WoodShadow"
-                            # made inside OUTPUT_DIR, so each run is self-
-                            # contained and nothing overwrites the last one.
-                            # strftime codes are filled in (%y%m%d -> 260817).
-                            # Set to None to write straight into the folder.
+                            # the name offered in that Save panel — and, when
+                            # OUTPUT_DIR is set, the subfolder made inside it so
+                            # a run doesn't overwrite the last. strftime codes
+                            # are filled in (%y%m%d -> 260817, %H%M -> 2114).
+                            # None = no subfolder, write straight into the folder.
 
 # ------------------------------------------------------------- the recipe ---
 
@@ -193,18 +197,32 @@ def build_cut(font, layer_name, style_name, vertical=None, report=None):
     return dst
 
 
-def make_directory(directory):
-    """The folder to write into, made if it isn't there — including the dated
-    subfolder, since the macOS folder picker can't create one."""
-    if OUTPUT_SUBFOLDER:
+def ask_where():
+    """Save panel, not a folder picker — it has the New Folder button, and the
+    name typed into it becomes the folder the files are written into."""
+    import time
+    default = time.strftime(OUTPUT_SUBFOLDER) if OUTPUT_SUBFOLDER else "WoodShadow"
+    try:
+        from vanilla.dialogs import putFile
+        return putFile(title="Save Wood Shadow as (this name becomes the folder)",
+                       fileName=default)
+    except ImportError:
+        from mojo.UI import GetFolder
+        return GetFolder("Where should the Wood Shadow files go?")
+
+
+def make_directory(directory, subfolder=None):
+    """The folder to write into, made if it isn't there — nested paths included."""
+    if subfolder:
         import time
-        directory = os.path.join(directory, time.strftime(OUTPUT_SUBFOLDER))
+        directory = os.path.join(directory, time.strftime(subfolder))
     if not os.path.isdir(directory):
         os.makedirs(directory)
     return directory
 
 
-def build(font, directory, cuts=None, ufo=True, otf=True, report=None):
+def build(font, directory, cuts=None, ufo=True, otf=True, subfolder=None,
+          report=None):
     """Write the cuts. Returns the list of paths written."""
     if cuts is None:
         cuts = []
@@ -213,7 +231,7 @@ def build(font, directory, cuts=None, ufo=True, otf=True, report=None):
         if MAKE_OUTSIDE:
             cuts.append(("Outside", OUTSIDE_LAYER))
 
-    directory = make_directory(directory)
+    directory = make_directory(directory, subfolder)
 
     vertical = box_vertical(font)
     print("   box band from %s: y %s..%s" % (REFERENCE_GLYPH, vertical[0], vertical[1]))
@@ -261,15 +279,18 @@ def main():
         return
 
     directory = OUTPUT_DIR
+    subfolder = OUTPUT_SUBFOLDER
+
     if directory is None:
-        from mojo.UI import GetFolder
-        directory = GetFolder("Where should the Wood Shadow files go?")
+        directory = ask_where()
         if not directory:
             print("Cancelled.")
             return
+        subfolder = None     # the dialog already named the folder
 
     report = []
-    written = build(font, directory, ufo=MAKE_UFO, otf=MAKE_OTF, report=report)
+    written = build(font, directory, ufo=MAKE_UFO, otf=MAKE_OTF,
+                    subfolder=subfolder, report=report)
 
     print("Wood Shadow — wrote %s file(s) to %s"
           % (len(written), os.path.dirname(written[0]) if written else directory))
