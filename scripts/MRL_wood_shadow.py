@@ -6,7 +6,7 @@ Set the options just below, hit Run. Leave OUTPUT_DIR as None and it asks.
 
 Recipe, reverse-engineered from 250730_WoodShadow_{inside,outside}.otf:
 
-    box    = x boxLeft..boxRight , y BOX_BOTTOM..BOX_TOP
+    box    = x boxLeft..boxRight , y from the shadow "O"
     letter = shifted so boxLeft lands at x = SHIFT
     frame  = two hollow rects, (OUTER-INNER) units thick
                outer = box grown by OUTER on all four sides
@@ -16,12 +16,14 @@ Recipe, reverse-engineered from 250730_WoodShadow_{inside,outside}.otf:
     Inside  = "Wood" layer           + frame
     Outside = default (SHADOW) layer + frame
 
-Both cuts get the SAME box, measured from the shadow — that is what makes the
-two fonts overlay. The "Shadow Square" layer is Nell's record of the shadow's
-own bounding box, so the box is the union of the two: where the square is still
-current they agree exactly and the 2025 files are reproduced to the unit; where
-the shadow has been redrawn since, the frame stays around the letter instead of
-cutting through it.
+Vertically the box is ONE pair of lines for the whole font: the top and bottom
+of the SHADOW layer's REFERENCE_GLYPH ("O"), whose overshoot sets the band every
+other glyph is boxed against. Same lines on every glyph, both cuts.
+
+Horizontally the box is per glyph, measured from the shadow — that is what makes
+the two cuts overlay, since the Wood letter sits inset within it. If the font
+still has a "Shadow Square" layer (Nell's older record of the shadow's own
+bounding box) it is unioned in; without it, the drawn shadow alone decides.
 
 No GSUB is built — the .ssNN alternates ride along in the glyph order, as in
 the 2025 files.
@@ -42,8 +44,9 @@ OUTPUT_DIR = None           # None = ask; or "/path/to/folder"
 SHIFT = 15          # x of the box's left edge in the exported glyph
 OUTER = 6           # frame outer edge, outside the box
 INNER = 4           # frame inner edge, outside the box
-BOX_BOTTOM = -13
-BOX_TOP = 983
+
+REFERENCE_GLYPH = "O"       # its shadow outline sets the box top and bottom
+BOX_FALLBACK = (-13, 983)   # only if that glyph is missing or empty
 
 SQUARE_LAYER = "Shadow Square"
 INSIDE_LAYER = "Wood"
@@ -104,9 +107,20 @@ def box_rect(font, name):
     return square or shadow
 
 
-def draw_frame(pen, left, right):
-    y0, y1 = BOX_BOTTOM, BOX_TOP
+def box_vertical(font):
+    """(bottom, top) of the box: the shadow O's own extremes, overshoot and all.
+    One pair of lines for the whole font, both cuts."""
+    shadow = source_layer(font, OUTSIDE_LAYER)
+    if REFERENCE_GLYPH in shadow:
+        bounds = shadow[REFERENCE_GLYPH].bounds
+        if bounds:
+            return float(bounds[1]), float(bounds[3])
+    print('   ! no usable "%s" in the shadow layer — box height falls back to %s'
+          % (REFERENCE_GLYPH, BOX_FALLBACK))
+    return BOX_FALLBACK
 
+
+def draw_frame(pen, left, right, y0, y1):
     # inner rect, clockwise
     pen.moveTo((right + INNER, y1 + INNER))
     pen.lineTo((right + INNER, y0 - INNER))
@@ -122,9 +136,10 @@ def draw_frame(pen, left, right):
     pen.closePath()
 
 
-def build_cut(font, layer_name, style_name, report=None):
+def build_cut(font, layer_name, style_name, vertical=None, report=None):
     """A new font holding one cut. Caller saves and/or generates it."""
     src = source_layer(font, layer_name)
+    bottom, top = vertical or box_vertical(font)
     dst = NewFont(showInterface=False)
 
     dst.info.unitsPerEm = font.info.unitsPerEm
@@ -154,10 +169,13 @@ def build_cut(font, layer_name, style_name, report=None):
             pen = g.getPen()
             srcGlyph.draw(TransformPen(pen, (1, 0, 0, 1, offset, 0)))
             letter = g.bounds
-            draw_frame(pen, left + offset, right + offset)
+            draw_frame(pen, left + offset, right + offset, bottom, top)
             g.width = (right - left) + 2 * SHIFT
             if report is not None and letter:
-                if letter[0] < SHIFT - INNER or letter[2] > SHIFT + (right - left) + INNER:
+                if (letter[0] < SHIFT - INNER
+                        or letter[2] > SHIFT + (right - left) + INNER
+                        or letter[1] < bottom - INNER
+                        or letter[3] > top + INNER):
                     report.append("overflows frame: %s" % name)
 
         uni = srcGlyph.unicodes
@@ -178,9 +196,13 @@ def build(font, directory, cuts=None, ufo=True, otf=True, report=None):
         if MAKE_OUTSIDE:
             cuts.append(("Outside", OUTSIDE_LAYER))
 
+    vertical = box_vertical(font)
+    print("   box band from %s: y %s..%s" % (REFERENCE_GLYPH, vertical[0], vertical[1]))
+
     written = []
     for style_name, layer_name in cuts:
-        cut = build_cut(font, layer_name, style_name, report=report)
+        cut = build_cut(font, layer_name, style_name, vertical=vertical,
+                        report=report)
         stem = "%s-%s" % ((cut.info.familyName or "WoodShadow").replace(" ", ""),
                           style_name)
 
