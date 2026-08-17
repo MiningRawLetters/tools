@@ -37,17 +37,14 @@ MAKE_OUTSIDE = True
 MAKE_UFO = True             # save a .ufo per cut
 MAKE_OTF = True             # generate an .otf per cut
 
-OUTPUT_DIR = None           # None = ask with a Save panel: navigate anywhere,
-                            # hit New Folder or just type a name, and that
-                            # name becomes the folder the files land in.
-                            # Or set a fixed "/path/to/folder", made if missing.
+OUTPUT_DIR = None           # None = ask. The picker has a New Folder button;
+                            # the folder you choose is the folder used, no
+                            # extra level added. Or set "/path/to/folder".
 
-OUTPUT_SUBFOLDER = "%y%m%d_WoodShadow"
-                            # the name offered in that Save panel — and, when
-                            # OUTPUT_DIR is set, the subfolder made inside it so
-                            # a run doesn't overwrite the last. strftime codes
-                            # are filled in (%y%m%d -> 260817, %H%M -> 2114).
-                            # None = no subfolder, write straight into the folder.
+OUTPUT_SUBFOLDER = None     # normally None: write straight into that folder.
+                            # Give it a name to nest one level — strftime codes
+                            # are filled in, e.g. "%y%m%d_WoodShadow" ->
+                            # 260817_WoodShadow. Made if missing.
 
 # ------------------------------------------------------------- the recipe ---
 
@@ -198,14 +195,23 @@ def build_cut(font, layer_name, style_name, vertical=None, report=None):
 
 
 def ask_where():
-    """Save panel, not a folder picker — it has the New Folder button, and the
-    name typed into it becomes the folder the files are written into."""
-    import time
-    default = time.strftime(OUTPUT_SUBFOLDER) if OUTPUT_SUBFOLDER else "WoodShadow"
+    """Pick the folder to write into. A plain folder picker, except with the
+    New Folder button switched on — so making a folder is a choice, not a
+    thing that happens to you."""
     try:
-        from vanilla.dialogs import putFile
-        return putFile(title="Save Wood Shadow as (this name becomes the folder)",
-                       fileName=default)
+        from AppKit import NSOpenPanel
+        panel = NSOpenPanel.openPanel()
+        panel.setCanChooseFiles_(False)
+        panel.setCanChooseDirectories_(True)
+        panel.setCanCreateDirectories_(True)
+        panel.setAllowsMultipleSelection_(False)
+        panel.setTitle_("Wood Shadow")
+        panel.setMessage_("Where should the Wood Shadow files go? "
+                          "Use New Folder if you want one.")
+        panel.setPrompt_("Write here")
+        if panel.runModal() != 1:      # NSModalResponseOK
+            return None
+        return panel.URL().path()
     except ImportError:
         from mojo.UI import GetFolder
         return GetFolder("Where should the Wood Shadow files go?")
@@ -279,18 +285,15 @@ def main():
         return
 
     directory = OUTPUT_DIR
-    subfolder = OUTPUT_SUBFOLDER
-
     if directory is None:
         directory = ask_where()
         if not directory:
             print("Cancelled.")
             return
-        subfolder = None     # the dialog already named the folder
 
     report = []
     written = build(font, directory, ufo=MAKE_UFO, otf=MAKE_OTF,
-                    subfolder=subfolder, report=report)
+                    subfolder=OUTPUT_SUBFOLDER, report=report)
 
     print("Wood Shadow — wrote %s file(s) to %s"
           % (len(written), os.path.dirname(written[0]) if written else directory))
